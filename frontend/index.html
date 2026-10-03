@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Velnixor | Intelligent candidate screening</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2318181b'/%3E%3Cpath d='M9.5 10l6.5 12.5L22.5 10' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header class="topbar">
+        <div class="topbar-inner">
+            <a class="brand" href="#setup">
+                <svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7"/><path d="M9.5 10l6.5 12.5L22.5 10"/></svg>
+                Velnixor
+                <span class="tagline">Intelligent candidate screening</span>
+            </a>
+            <nav class="tabs" role="tablist">
+                <a href="#setup" role="tab" data-tab="setup">Setup</a>
+                <a href="#results" role="tab" data-tab="results">Results <span class="count" id="tabCount" hidden></span></a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="wrap">
+        <!-- Setup: inputs only -->
+        <section class="view" id="view-setup" role="tabpanel">
+            <div class="page-head">
+                <div>
+                    <h1>New screening</h1>
+                    <p>Describe the role and add resumes. Your settings are kept for the next run.</p>
+                </div>
+            </div>
+
+            <div class="setup">
+                <div class="setup-main">
+                    <section class="panel">
+                        <header class="panel-head"><h2>Role</h2><span class="hint">Every resume is scored against this</span></header>
+                        <div class="row">
+                            <div class="row-label">
+                                <label for="jd">Job description</label>
+                                <p>Paste the full posting. Its terms drive the JD match score.</p>
+                            </div>
+                            <div class="row-control">
+                                <textarea id="jd" rows="11" placeholder="Paste the job description"></textarea>
+                                <div class="row-foot"><span>Plain text works best</span><span id="jdCount">0 words</span></div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="row-label">
+                                <label for="skillsInput">Required skills</label>
+                                <p>Matched as whole words, so Java won't match JavaScript.</p>
+                            </div>
+                            <div class="row-control">
+                                <div class="tags" id="skills"><input id="skillsInput" placeholder="Add a skill and press Enter" autocomplete="off"></div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="row-label">
+                                <label for="keywordsInput">Keywords</label>
+                                <p>Domain terms, tools and certifications. Nice to have.</p>
+                            </div>
+                            <div class="row-control">
+                                <div class="tags" id="keywords"><input id="keywordsInput" placeholder="Add a keyword and press Enter" autocomplete="off"></div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="row-label">
+                                <label for="minExp">Minimum experience</label>
+                                <p>Optional. Leave empty to ignore experience.</p>
+                            </div>
+                            <div class="row-control inline">
+                                <input type="number" id="minExp" min="0" max="50" step="0.5" placeholder="Any"><span>years</span>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="panel">
+                        <header class="panel-head"><h2>Resumes</h2><span class="hint" id="queueCount">0 queued</span></header>
+                        <div class="panel-body stack">
+                            <div class="dropzone" id="dropzone">
+                                <span class="dz-icon"><i data-i="upload"></i></span>
+                                <div class="dz-text">
+                                    <strong>Drop resume files or folders here</strong>
+                                    <span>PDF, DOCX, TXT or MD. Folders are scanned recursively.</span>
+                                </div>
+                                <label class="btn" for="fileInput">Browse files</label>
+                                <input type="file" id="fileInput" multiple accept=".pdf,.docx,.txt,.md" hidden>
+                            </div>
+                            <div>
+                                <label class="sub-label" for="pathInput">Or scan a folder on this computer</label>
+                                <div class="path-row">
+                                    <div class="input-icon"><i data-i="folder"></i><input id="pathInput" placeholder="D:\Hiring\Resumes" autocomplete="off"></div>
+                                    <button class="btn" id="browseBtn">Choose…</button>
+                                    <button class="btn" id="addPathBtn">Add</button>
+                                </div>
+                            </div>
+                            <div class="sources" id="sources" hidden>
+                                <ul id="sourceList"></ul>
+                                <div class="sources-foot"><span id="sourcesTotal"></span><button class="link" id="clearSources">Clear all</button></div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <aside class="setup-rail">
+                    <section class="panel">
+                        <header class="panel-head"><h2>Scoring</h2><span class="hint">Share of overall score</span></header>
+                        <div class="panel-body stack">
+                            <div class="dist" aria-hidden="true"><i data-seg="jd"></i><i data-seg="skills"></i><i data-seg="keywords"></i><i data-seg="exp"></i></div>
+                            <div class="weight"><div><span class="swatch" data-seg="jd"></span><label for="wJd">Job description match</label><output>40%</output></div><input type="range" id="wJd" min="0" max="100" value="40" data-w="jd"></div>
+                            <div class="weight"><div><span class="swatch" data-seg="skills"></span><label for="wSkills">Required skills</label><output>30%</output></div><input type="range" id="wSkills" min="0" max="100" value="30" data-w="skills"></div>
+                            <div class="weight"><div><span class="swatch" data-seg="keywords"></span><label for="wKeywords">Keywords</label><output>20%</output></div><input type="range" id="wKeywords" min="0" max="100" value="20" data-w="keywords"></div>
+                            <div class="weight"><div><span class="swatch" data-seg="exp"></span><label for="wExp">Experience</label><output>10%</output></div><input type="range" id="wExp" min="0" max="100" value="10" data-w="exp"></div>
+                            <div class="threshold">
+                                <div><label for="threshold">Shortlist threshold</label><output id="thresholdOut">60%</output></div>
+                                <input type="range" id="threshold" min="0" max="100" value="60">
+                                <p>Candidates scoring <span id="thresholdText">60</span> or higher are shortlisted. You can change this after the run.</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="panel">
+                        <header class="panel-head"><h2>Ready to run</h2></header>
+                        <div class="panel-body">
+                            <ul class="checklist" id="checklist"></ul>
+                            <button class="btn primary block" id="runBtn"><i data-i="play"></i> Run screening</button>
+                            <div class="progress" id="progress" hidden>
+                                <div class="progress-bar"><i id="progressFill"></i></div>
+                                <span id="progressText">Uploading…</span>
+                            </div>
+                            <p class="note">Files are read on this machine and never uploaded elsewhere.</p>
+                        </div>
+                    </section>
+                </aside>
+            </div>
+        </section>
+
+        <!-- Results: KPIs, shortlist, candidate table -->
+        <section class="view" id="view-results" role="tabpanel" hidden>
+            <div class="page-head">
+                <div>
+                    <h1>Results</h1>
+                    <p id="runMeta">No screening has been run yet.</p>
+                </div>
+                <div class="actions" id="resultActions" hidden>
+                    <button class="btn" id="csvBtn"><i data-i="sheet"></i> Export CSV</button>
+                    <button class="btn primary" id="zipBtn"><i data-i="download"></i> <span>Download shortlisted</span></button>
+                </div>
+            </div>
+
+            <div class="panel empty-state" id="noResults">
+                <p>Results show up here after you run a screening.</p>
+                <a class="btn" href="#setup">Go to setup</a>
+            </div>
+
+            <div id="resultsBody" hidden>
+                <div class="stale" id="stale" hidden>
+                    <i data-i="alert"></i> The job criteria changed after this run. <button class="link" id="rerunBtn">Run again</button>
+                </div>
+
+                <div class="kpis">
+                    <div class="kpi"><span>Screened</span><strong id="kTotal">0</strong><small id="kTotalSub"></small></div>
+                    <div class="kpi"><span>Shortlisted</span><strong id="kShort">0</strong><small id="kShortSub"></small></div>
+                    <div class="kpi"><span>Average score</span><strong id="kAvg">0</strong><small>readable resumes</small></div>
+                    <div class="kpi"><span>Top score</span><strong id="kTop">–</strong><small id="kTopSub"></small></div>
+                </div>
+
+                <section class="panel">
+                    <div class="toolbar">
+                        <div class="seg" id="filters">
+                            <button class="on" data-f="short">Shortlisted <b id="cShort"></b></button>
+                            <button data-f="all">All <b id="cAll"></b></button>
+                            <button data-f="rest">Below threshold <b id="cRest"></b></button>
+                        </div>
+                        <div class="input-icon search"><i data-i="search"></i><input type="search" id="search" placeholder="Filter by name, email or skill"></div>
+                    </div>
+                    <div class="table-scroll">
+                        <table id="table">
+                            <thead>
+                                <tr>
+                                    <th data-sort="rank">#</th>
+                                    <th data-sort="candidate">Candidate</th>
+                                    <th data-sort="score" class="sorted">Score</th>
+                                    <th data-sort="jd">JD match</th>
+                                    <th data-sort="skills">Skills</th>
+                                    <th data-sort="keywords">Keywords</th>
+                                    <th data-sort="exp">Experience</th>
+                                    <th>Status</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                        <p class="empty" id="empty" hidden>No candidates in this view.</p>
+                    </div>
+                </section>
+            </div>
+        </section>
+    </main>
+
+    <div class="scrim" id="scrim"></div>
+    <aside class="drawer" id="drawer" aria-hidden="true" role="dialog" aria-label="Candidate details"></aside>
+    <div class="toasts" id="toasts" aria-live="polite"></div>
+
+    <script src="js/script.js"></script>
+</body>
+</html>
